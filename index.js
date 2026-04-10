@@ -6,10 +6,11 @@ const connectDB = require('./db/db');
 const PORT = process.env.PORT || 3000;
 const productRoutes = require('../backend/routes/product.route');
 const authRoutes = require('../backend/routes/user.route');
-
+const cartRoutes = require('../backend/routes/cart.route');
 app.use(express.json());
 app.use('/product',productRoutes);
 app.use('/auth',authRoutes);
+app.use('/cart',cartRoutes);
 
 
 

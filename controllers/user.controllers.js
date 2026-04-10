@@ -131,7 +131,7 @@ const resetPassword = async(req,res)=>{
 // logout user
 const logoutUser = async(req,res)=>{
     res.clearCookie("token");
-    res.status(200).json({success:true,message:"You are Logout Successfully"})
+    res.status(200).json({success:true,message:"You Logout Successfully"})
 }
 // get all user
 const getAlluser = async(req,res)=>{

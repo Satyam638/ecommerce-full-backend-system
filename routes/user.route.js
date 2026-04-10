@@ -12,6 +12,10 @@ router.put('/api/user/reset-password',
     isAuthenticated.validUser,
     authController.resetPassword);
 
+router.post('/api/user/logout',
+    isAuthenticated.validUser,
+    authController.logoutUser);
+
 router.get('/api/user/all-user',
     isAuthenticated.validUser,
     isAuthenticated.isAdmin,
