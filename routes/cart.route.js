@@ -17,5 +17,9 @@ router.get('/api/get-cart',
     isAutheticate.validUser,
     cartController.getCart
 );
+router.delete('/api/delete-product',
+    isAutheticate.validUser,
+    cartController.deleteProduct
+)
 
 module.exports = router;
