@@ -1,60 +1,102 @@
 const cartModel = require('../models/cart.model');
 const productModel = require('../models/product.model');
-const { userModel } = require('../models/user.model');
 
 const addToCart = async (req, res) => {
     try {
         const { cartItems } = req.body;
+        const userId = req.userId;
 
-        // extract product ids
+        // 🔴 check if cart already exists
+        let cart = await cartModel.findOne({ userId });
+
+        // extract product ids from cart 
         const productIds = cartItems.map(item => item.productId);
 
-        // fetch products
-        const productDetails = await productModel.find({
+        // now find products from product DB to find prices, and more
+        const products = await productModel.find({
             _id: { $in: productIds }
-        }).select('name price');
+        }).select('price name');
 
-        // create map
+        // lets map productIds from cart along with the information about product comes from product database
         const productMap = {};
 
-        productDetails.forEach(p => {
+        products.forEach(p => {
             productMap[p._id.toString()] = p;
         });
 
-        // calculate total
-        let totalAmt = 0;
-
-        const updatedCartItems = cartItems.map(item => {
-
+        const updatedItems = cartItems.map(item => {
             const product = productMap[item.productId.toString()];
 
-            const itemPrice = product.price * item.quantity;
-
-            totalAmt += itemPrice;
-
+            // validate product exists
+            if (!product) {
+                throw new Error(`Product not found: ${item.productId}`);
+            }
             return {
+                // comes prom cart item -> cart
                 productId: item.productId,
                 quantity: item.quantity,
-                price: product.price
-            }
+                // comes from product model -> product
+                price: product.price,
+                name:product.name
+            };
         });
 
+        // CASE 1: cart already exists → UPDATE
+        if (cart) {
+
+            updatedItems.forEach(newItem => {
+
+                // find allready existing items from cart
+                const existingItem = cart.cartItems.find(
+                    i => i.productId.toString() === newItem.productId.toString()
+                );
+
+                // if item exist then increase their quantity
+                if (existingItem) {
+                    existingItem.quantity += newItem.quantity;
+                } else {
+                    // else add new product to the cart
+                    cart.cartItems.push(newItem);
+                }
+            });
+
+            // recalc total
+            cart.totalAmt = cart.cartItems.reduce(
+                (total, item) => total + item.price * item.quantity,
+                0
+            );
+
+            await cart.save();
+
+            return res.status(200).json({
+                success: true,
+                message: "Cart updated",
+                data: cart
+            });
+        }
+
+        // CASE 2: cart not exists → CREATE CART
+        let totalAmt = updatedItems.reduce(
+            (total, item) => total + item.price * item.quantity,
+            0
+        );
+
+
         // create cart
-        const cart = await cartModel.create({
-            userId: req.userId,
-            cartItems: updatedCartItems,
+        cart = await cartModel.create({
+            userId,
+            cartItems: updatedItems,
             totalAmt
         });
-        console.log("Cart is Created SuccessFully", cart);
+
         res.status(201).json({
             success: true,
-            message: "Cart created successfully",
+            message: "Cart created",
             data: cart
         });
 
     } catch (error) {
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
@@ -68,18 +110,43 @@ const updateQty = async (req, res) => {
         const userId = req.userId;
 
         const cart = await cartModel.findOne({ userId })
-        const item = cart.cartItems.find(item => item.productId.toString() === productId)
+        if (!cart) {
+            return res.status(404).json({
+                success: false,
+                message: "Cart not found"
+            });
+        }
+        const item = cart.cartItems.find(
+            item => item.productId.toString() === productId
+        )
+
+        if (!item) return res.status(404).json({
+            success: false,
+            message: "Product not found in Cart"
+        });
 
         // for(let item of cart.cartItems){
         //     if(item.productId.toString() === productId) item = productId
         // }
+        if (action !== 'INC' && action !== 'DEC') {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid action"
+            });
+        }
 
         // update quantity based on action keyword
-
         if (action === 'INC') {
 
             const productItem = await productModel.findById(productId).select('inStock');
 
+            // 🔴 check product exists
+            if (!productItem) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Product not found"
+                });
+            }
             if (productItem.inStock < item.quantity + 1) return res.status(400).json({
                 success: false,
                 message: "Product is Out of Stock"
@@ -129,11 +196,33 @@ const updateQty = async (req, res) => {
 const getCart = async (req, res) => {
     const cart = await cartModel.findOne({ userId: req.userId }).populate('cartItems.productId', 'name');
 
+    if (!cart) {
+        return res.status(200).json({
+            success: true,
+            message: "Cart is empty",
+            data: {
+                cartData: [],
+                totalAmt: 0
+            }
+        });
+    }
+
+    // data which want to show when user click getCart
+    const cartData = cart.cartItems.map(item => ({
+        name: item.productId.name,
+        price: item.price,
+        quantity: item.quantity,
+        subtotal: item.price * item.quantity
+    }));
+
     console.log(cart);
     res.status(200).json({
         success: true,
         message: "Your Selected Products is",
-        data: cart
+        data: {
+            cartData,
+            totalAmt: cart.totalAmt
+        }
     });
 }
 const deleteProduct = async (req, res) => {

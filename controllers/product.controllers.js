@@ -109,6 +109,7 @@ const getAllProduct = async (req, res) => {
         // find all product
         let skip = (page - 1) * limit
         const allProduct = await product.find().skip(skip).limit(limit);
+        // .skip(skip).limit(limit);
         console.log('All product are:', allProduct);
         res.status(200).json({
             success: true,

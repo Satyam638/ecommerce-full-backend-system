@@ -16,7 +16,7 @@ const validUser = async(req,res,next) =>{
         })
     }
     req.userId = decoded.userId;
-    console.log('Your are Authenticated User');
+    console.log(`Your are Authenticated User with ${req.userId}`);
     next();
 }
 

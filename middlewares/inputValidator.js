@@ -1,3 +1,4 @@
+const cartModel = require('../models/cart.model');
 const productModel = require('../models/product.model');
 
 
@@ -44,8 +45,8 @@ const cartInputValid = async(req,res,next)=>{
     const {cartItems} = req.body;
 
     // check cart array
-    if(!cartItems || !Array.isArray(cartItems)) {
-        return res.status(400).json("Cart Item must be Provided and in array format")
+    if(!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+        return res.status(400).json("Cart Item can not be empty")
     }
 
     // let's traverse cart array items
@@ -59,7 +60,7 @@ const cartInputValid = async(req,res,next)=>{
     }
 
     }
-    console.log('Request is Valid, now create create');
+    console.log('Request is Valid, now create Cart For You');
     next();
 }
 
@@ -103,9 +104,29 @@ const checkProductQty = async(req,res,next)=>{
     next();
 }
 
+const isCartExist = async(req,res,next)=>{
+
+    const userId = req.userId;
+    const cart = await cartModel.findOne({userId});
+    if(!cart) return res.status(400).json("Cart Should be Present");
+    else if(cart.cartItems.length === 0) return res.status(400).json("Please Add items to Cart to Order");
+
+    // req.cart = cart;
+    console.log("Cart Exists so, let's Create Order your Selected Products");
+
+    next();
+}
+
+const deleteCart = async (req,next) => {
+    const deletedCart = await cartModel.findByIdAndDelete(req.userId);
+    console.log("Your cart is deleted Successfully", deletedCart);
+    next();
+}
 module.exports = {
     isInputValid,
     validateUserReq,
     cartInputValid,
-    checkProductQty
+    checkProductQty,
+    isCartExist,
+    deleteCart
 };
