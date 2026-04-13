@@ -9,8 +9,20 @@ router.post('/api/create-order',
     isCartExist.isCartExist,
     orderController.createOrder
 );
-
-// router.get('/api/my-order');
+router.get('/api/my-orders',
+    authticate.validUser,
+    orderController.myOrders
+);
+router.put('/api/request-cancel',
+    authticate.validUser,
+    authticate.isUser,
+    orderController.requestCancelOrder
+);
+router.patch('/api/cancel-orders/:orderid',
+    authticate.validUser,
+    authticate.isAdmin,
+    orderController.cancelOrder
+);
 
 // router.post('/api/payment')
 
