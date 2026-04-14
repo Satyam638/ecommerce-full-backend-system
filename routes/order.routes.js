@@ -23,6 +23,12 @@ router.patch('/api/cancel-orders/:orderid',
     authticate.isAdmin,
     orderController.cancelOrder
 );
+router.post('/api/create-payment-order',
+    orderController.createPaymentOrder
+);
+router.post('/api/verify-payment',
+    orderController.verifyPayment
+);
 
 // router.post('/api/payment')
 

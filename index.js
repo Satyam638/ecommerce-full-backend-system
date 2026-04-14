@@ -11,6 +11,8 @@ const orderRoutes = require('../backend/routes/order.routes');
 
 
 // middleware
+const cors = require("cors");
+app.use(cors());
 app.use(express.json());
 // routes
 app.use('/product',productRoutes);

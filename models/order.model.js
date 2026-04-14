@@ -21,7 +21,7 @@ const orderSchema = mongoose.Schema({
     },
     paymentStatus:{
         type:String,
-        enum:['CONFIRMED','INCOMPLETE'],
+        enum:['CONFIRMED','INCOMPLETE','FAILED'],
         default:'INCOMPLETE'
     },
     cartItems: [
@@ -35,6 +35,10 @@ const orderSchema = mongoose.Schema({
             productName:String
         }
     ],
+    paymentOrderId:{
+        type:String,
+    }
+    ,
     totalAmt:Number
 },{
     timestamps:true
