@@ -5,6 +5,7 @@ const Razorpay = require('razorpay');
 const razorpayInstance = require('../config/razorpay');
 const { verify } = require('jsonwebtoken');
 const crypto = require('crypto');
+const sendMail = require('../services/emailService');
 // const deleteCart = require('../middlewares/inputValidator');
 
 
@@ -106,7 +107,7 @@ const cancelOrder = async (req, res) => {
         console.log(isOrderExist);
 
         setTimeout(() => {
-            res.status(200).json({ success: false, message: "Order is Cancelled successully",data:isOrderExist})
+            res.status(200).json({ success: false, message: "Order is Cancelled successully", data: isOrderExist })
         }, 2000);
     }
     catch (error) {
@@ -117,16 +118,16 @@ const cancelOrder = async (req, res) => {
 // request comes from user
 const requestCancelOrder = async (req, res) => {
     try {
-        const {orderId} = req.body;
+        const { orderId } = req.body;
         const userId = req.userId
 
-        const findOrder = await orderModel.findById(orderId); 
+        const findOrder = await orderModel.findById(orderId);
         // check order exist or not
-        if(!findOrder) return res.status(400).json({success:false,message:"Order Not Found"});
+        if (!findOrder) return res.status(400).json({ success: false, message: "Order Not Found" });
         // check is the order belong to the same logged in user or nor
-        if(userId.toString() !== findOrder.userId.toString()) return res.status(403).json({success:false,message:"This Order is not belongs to you"});
+        if (userId.toString() !== findOrder.userId.toString()) return res.status(403).json({ success: false, message: "This Order is not belongs to you" });
         // if stastu is already delivered then not perform operation
-        if(findOrder.orderStatus === 'DELIVERED') return res.status(400).json({success:false,message:"Order can't be Cancelled"});
+        if (findOrder.orderStatus === 'DELIVERED') return res.status(400).json({ success: false, message: "Order can't be Cancelled" });
 
         // now mark request cancel and return user
         findOrder.orderStatus = 'REQUEST_CANCEL';
@@ -134,7 +135,7 @@ const requestCancelOrder = async (req, res) => {
         await findOrder.save();
         // return response
         console.log('Request is Raised for Cancel Order');
-        res.status(200).json({success:true,message:"Request is Raise for Cancel Order",data:findOrder});
+        res.status(200).json({ success: true, message: "Request is Raise for Cancel Order", data: findOrder });
 
     }
     catch (error) {
@@ -173,22 +174,22 @@ const myOrders = async (req, res) => {
     }
 }
 // payment
-const createPaymentOrder = async(req,res)=>{
-    try{
+const createPaymentOrder = async (req, res) => {
+    try {
 
-        const {orderId}  = req.body;
+        const { orderId } = req.body;
 
         // find order
 
         const order = await orderModel.findById(orderId);
 
-        if(!order) return res.status(404).json({success:false,messge:"Order Not Found"})
+        if (!order) return res.status(404).json({ success: false, messge: "Order Not Found" })
 
         // lets fetch totalamount
         const options = {
-            amount:order.totalAmt*100, //convert into paise
-            currency:"INR",
-            receipt:`receipt${order._id.toString()}`
+            amount: order.totalAmt * 100, //convert into paise
+            currency: "INR",
+            receipt: `receipt${order._id.toString()}`
         }
 
         // call razorpay to create payment order
@@ -203,58 +204,68 @@ const createPaymentOrder = async(req,res)=>{
         await order.save();
 
         // return response to perform payment
+        console.log("orderId:", order.paymentOrderId);
         res.json({
-            success:true,
-            key:process.env.RAZORPAY_KEY_ID,
-            amount:paymetOrder.amount,
-            currency:paymetOrder.currency,
-            razorpayOrderId:paymetOrder.id
+            success: true,
+            key: process.env.RAZORPAY_KEY_ID,
+            amount: paymetOrder.amount,
+            currency: paymetOrder.currency,
+            razorpayOrderId: paymetOrder.id
         })
 
 
     } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Error creating payment order" });
-  }
+        console.log(err);
+        res.status(500).json({ message: "Error creating payment order" });
+    }
 }
 // let's confirm payment is completed or not
-const verifyPayment = async(req,res)=>{
+const verifyPayment = async (req, res) => {
 
-    try{
+    try {
         const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature
-    } = req.body;
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature,
+        } = req.body;
 
-    // generate signature to verify payment is done ot not
-    const generateSignature  = crypto.createHmac("sha256",
-        process.env.RAZORPAY_KEY_SECRET).
-        update(razorpay_order_id + "|" + razorpay_payment_id).
-        digest('hex');
+        // generate signature to verify payment is done ot not
+        const generateSignature = crypto.createHmac("sha256",
+            process.env.RAZORPAY_KEY_SECRET).
+            update(razorpay_order_id + "|" + razorpay_payment_id).
+            digest('hex');
 
-    if(generateSignature !== razorpay_signature){
-        return res.status(400).json({success:false,message:"Payment Verification Failed"});
-    }
-    // payment is verified
-    console.log("Payment is Verified");
-    const order = await orderModel.findOne({paymentOrderId:razorpay_order_id});
+        if (generateSignature !== razorpay_signature) {
+            return res.status(400).json({ success: false, message: "Payment Verification Failed" });
+        }
+        // payment is verified
+        console.log("Payment is Verified");
+        const order = await orderModel.findOne({ paymentOrderId: razorpay_order_id }).populate('userId');
 
-    order.paymentStatus='CONFIRMED';
-    order.orderStatus='SHIPPED';
+        order.paymentStatus = 'CONFIRMED';
+        order.orderStatus = 'SHIPPED';
 
-    await order.save();
+        // let's mail to the user
+        console.log("Username: ", order.userId.email);
+        sendMail(
+            order.userId.email,
+            "Payment is Successful 🎉",
+            `Hello ${order.userId.name}, your payment ${order.totalAmt} is successful,
+            Thank You for Shopping With Us`
+        );
 
-    res.status(200).json({
-      success: true,
-      message: "Payment successful"
-    });
+        await order.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Payment successful"
+        });
 
     }
     catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Verification failed" });
-  }
+        console.log(error);
+        res.status(500).json({ message: "Verification failed" });
+    }
 }
 
 module.exports = {
