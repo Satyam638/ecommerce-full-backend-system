@@ -12,7 +12,7 @@ const createorAddProduct = async (req, res) => {
         // now image upload into cloud provider;
 
         let urlOfImage = "";
-
+        // fetch image from request file and upload into imagekit cloud
         if (req.file) {
             const response = await imagekit.upload({
                 file: req.file.buffer,
@@ -98,7 +98,8 @@ const deleteProductById = async (req, res) => {
     }
 }
 const getAllProduct = async (req, res) => {
-    try {// get query from req to implement pagination
+    try {
+        // get query from req to implement pagination
         // came as string so we need convert its data type into number
         let { limit = 5, page = 1 } = req.query
 
@@ -128,7 +129,7 @@ const getAllProduct = async (req, res) => {
 const getProductByCategory = async (req, res) => {
 
     try {
-        const { limit = 5, page = 1, category } = req.query
+        let { limit = 5, page = 1, category } = req.query
 
         // convert into number Dtype
         limit = Number(limit);
@@ -144,13 +145,18 @@ const getProductByCategory = async (req, res) => {
                 }
             )
         }
-        category = { $regex: category, $options: 'i' }
+        console.log('category:',category);
+        const categoryFilter = { $regex: category, $options: 'i' }
+
+         const totalProduct = await product.countDocuments({ category: categoryFilter });
+        console.log(`Total Product in ${category}  is:`,totalProduct);
 
         // find product for same category
-        const productByCategory = await product.find({ category: category }).skip(skip).limit(limit);
-
+        const productByCategory = await product.find({ category: categoryFilter }).skip(skip).limit(limit);
+        console.log(`Product in ${category} is:`,productByCategory);
         res.status(200).json({
             success: true, message: `Products of ${category} is`,
+            count:totalProduct,
             data: productByCategory
         })
     }

@@ -8,7 +8,14 @@ const crypto = require('crypto');
 const sendMail = require('../services/emailService');
 // const deleteCart = require('../middlewares/inputValidator');
 
-
+// steps to create order
+// s.1->fetch cart details using userid because every user has only one cart
+// s.2-> now fetch all details from the ref product(name and more)
+// s.3-> now create order
+// s.4-> then update stock by fetching productid from cartItem -> find all product details from product model-> run a loop over productid and reduce their corresponding storck by quantity 
+// s.5-> now save product 
+// s.6-> then delete cart
+// s.7-> send response
 const createOrder = async (req, res) => {
 
     try {
@@ -173,7 +180,11 @@ const myOrders = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 }
-// payment
+// payment Integration
+// s.1-> fetch orderId from request 
+// s.2-> fetch order details{totalAmt, currency, orderid-FOR RECEIPT}
+// s.3-> SEND FETCHED ORDER DETAILS TO RAZORPAY API
+// s.4-> NOW RAZORPAY WILL CREATE PAYMENT ORDER AND SEND paymentOrderAPI to the frontend where user will proceed amount then when the payment is complement then razorpay will send payment api, signature and orderid to verify signature
 const createPaymentOrder = async (req, res) => {
     try {
 
@@ -220,6 +231,9 @@ const createPaymentOrder = async (req, res) => {
     }
 }
 // let's confirm payment is completed or not
+// s.5-> now will verify so first will fetch all required details comes from frontend
+// s.5-> then backend will user crypto to verify signature so if the signature is correct then the payment is genuine else payment is fake
+// s.5-> if the payment is genuine then backend will mailed order details to the user using nodemailer service 
 const verifyPayment = async (req, res) => {
 
     try {
@@ -247,6 +261,7 @@ const verifyPayment = async (req, res) => {
 
         // let's mail to the user
         console.log("Username: ", order.userId.email);
+        // send mail to the user if the payment is confirmed
         sendMail(
             order.userId.email,
             "Payment is Successful 🎉",

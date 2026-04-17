@@ -1,6 +1,14 @@
 const cartModel = require('../models/cart.model');
 const productModel = require('../models/product.model');
 
+
+// steps
+// s.1->fetch cart details
+// s.2->extract productid from cart items
+// s.3-> now find all product from product model using productid 
+// s.4-> now mp product id with product details
+// s.5-> but check if the cart is already exists, so if exists then we check is product added in request is already added ? so if added then increase the quantiy
+// s.6 -> now will  calculate total Amt of cart of added items 
 const addToCart = async (req, res) => {
     try {
         const { cartItems } = req.body;
@@ -162,10 +170,6 @@ const updateQty = async (req, res) => {
                 i => i.productId.toString() !== productId
             )
         }
-
-        // lets check if the quanity is increased by the we need to check is product in stock
-
-
         // let's calcluate the final amount
         let total = 0;
 

@@ -3,8 +3,53 @@ const route = express.Router();
 const productController = require('../controllers/product.controllers');
 const upload = require('../middlewares/upload')
 const isValid = require('../middlewares/inputValidator');
-// add product
+const authenticate = require('../middlewares/identifiers');
 
+// homepage
+/**
+ * @swagger
+ * /api/:
+ *   get:
+ *     summary: Get all products (Homepage)
+ *     tags: [Product]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         required: false
+ *         description: Page number
+ *
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         required: false
+ *         description: Number of products per page
+ *
+ *     responses:
+ *       200:
+ *         description: Products fetched successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               message: All products fetched successfully
+ *               count: 20
+ *               data:
+ *                 - _id: "123"
+ *                   name: "iPhone 15"
+ *                   category: "mobile"
+ *                   price: 79999
+ *
+ *       500:
+ *         description: Internal Server Error
+ */
+route.get('',productController.getAllProduct);
+
+// add product
 /**
  * @swagger
  * /api/products/add-product:
@@ -32,6 +77,7 @@ const isValid = require('../middlewares/inputValidator');
  *         description: Product added successfully
  */
 route.post('/api/products/add-product',
+    authenticate.isAdmin, //only admin can add product
    upload.single('productImage'), //multer will read image data  
    isValid.isInputValid, // check input is valid or not
     productController.createorAddProduct //business logic to store product into database
@@ -67,6 +113,7 @@ route.post('/api/products/add-product',
  *         description: Product updated successfully
  */
 route.put('/api/products/update-product/:id',
+    authenticate.isAdmin, //only admin can update details of product
     productController.updateProduct
 );
 /**
@@ -82,6 +129,7 @@ route.put('/api/products/update-product/:id',
 route.get('/api/products/all-product',
     productController.getAllProduct
 );
+
 /**
  * @swagger
  * /api/products/search:
@@ -103,5 +151,44 @@ route.get(
   '/api/products/search',
   productController.getProductByName
 );
+/**
+ * @swagger
+ * /api/products/category:
+ *   get:
+ *     summary: Get products by category with pagination
+ *     tags: [Product]
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Category name to filter products
+ *
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         required: false
+ *         description: Page number
+ *
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *         required: false
+ *         description: Number of products per page
+ *
+ *     responses:
+ *       200:
+ *         description: Products fetched successfully
+ *       422:
+ *         description: Category name must be present
+ *       500:
+ *         description: Internal Server Error
+ */
+route.get('/api/products/category',productController.getProductByCategory);
 
 module.exports = route;

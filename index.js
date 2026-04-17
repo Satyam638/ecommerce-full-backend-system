@@ -23,6 +23,7 @@ app.use('/product',productRoutes);
 app.use('/auth',authRoutes);
 app.use('/cart',cartRoutes);
 app.use('/orders',orderRoutes)
+app.use('/',productRoutes);
 
 
 // connected to DB
