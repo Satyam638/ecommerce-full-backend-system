@@ -5,7 +5,7 @@ const validUser = async(req,res,next) =>{
 
 
     const token = req.headers['token'];
-    if(!token) return res.status(404).json("Token is Missing");
+    if(!token) return res.status(401).json("Token is Missing");
 
     const decoded = jwt.verify(token,process.env.SECRET_KEY)
 

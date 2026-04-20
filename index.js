@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 require('dotenv').config()
+require('../backend/config/redis');
 const mongoose = require('mongoose');
 const connectDB = require('./db/db');
 const swaggerUi = require("swagger-ui-express");
@@ -17,12 +18,13 @@ const cors = require("cors");
 app.use(cors());
 // ✅ Swagger (can be before or after, but MUST exist)
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// console.log(JSON.stringify(swaggerSpec.paths, null, 2));
 app.use(express.json());
 // routes
-app.use('/product',productRoutes);
-app.use('/auth',authRoutes);
-app.use('/cart',cartRoutes);
-app.use('/orders',orderRoutes)
+app.use('/api/products',productRoutes);
+app.use('/api/auth',authRoutes);
+app.use('/api/cart',cartRoutes);
+app.use('/api/orders',orderRoutes)
 app.use('/',productRoutes);
 
 

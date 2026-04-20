@@ -6,7 +6,7 @@ const isCartExist = require('../middlewares/inputValidator');
 
 /**
  * @swagger
- * /api/create-order:
+ * /api/order/create-order:
  *   post:
  *     summary: Create order from cart
  *     tags: [Orders]
@@ -16,14 +16,14 @@ const isCartExist = require('../middlewares/inputValidator');
  *       200:
  *         description: Order created successfully
  */
-router.post('/api/create-order',
+router.post('/create-order',
     authticate.validUser,
     isCartExist.isCartExist,
     orderController.createOrder
 );
 /**
  * @swagger
- * /api/my-orders:
+ * /api/order/my-orders:
  *   get:
  *     summary: Get all orders of logged-in user
  *     tags: [Orders]
@@ -33,13 +33,13 @@ router.post('/api/create-order',
  *       200:
  *         description: List of user orders
  */
-router.get('/api/my-orders',
+router.get('/my-orders',
     authticate.validUser,
     orderController.myOrders
 );
 /**
  * @swagger
- * /api/request-cancel:
+ * /api/order/request-cancel:
  *   put:
  *     summary: User requests order cancellation
  *     tags: [Orders]
@@ -58,14 +58,14 @@ router.get('/api/my-orders',
  *       200:
  *         description: Cancel request submitted
  */
-router.put('/api/request-cancel',
+router.put('/request-cancel',
     authticate.validUser,
     authticate.isUser,
     orderController.requestCancelOrder
 );
 /**
  * @swagger
- * /api/cancel-orders/{orderId}:
+ * /api/order/cancel-orders/{orderId}:
  *   patch:
  *     summary: Admin cancels order after user request
  *     tags: [Orders]
@@ -82,14 +82,14 @@ router.put('/api/request-cancel',
  *       200:
  *         description: Order cancelled successfully
  */
-router.patch('/api/cancel-orders/:orderid',
+router.patch('/cancel-orders/:orderid',
     authticate.validUser,
     authticate.isAdmin,
     orderController.cancelOrder
 );
 /**
  * @swagger
- * /api/create-payment-order:
+ * /api/order/create-payment-order:
  *   post:
  *     summary: Create Razorpay payment order
  *     tags: [Payment]
@@ -106,12 +106,12 @@ router.patch('/api/cancel-orders/:orderid',
  *       200:
  *         description: Payment order created
  */
-router.post('/api/create-payment-order',
+router.post('/create-payment-order',
     orderController.createPaymentOrder
 );
 /**
  * @swagger
- * /api/verify-payment:
+ * /api/order/verify-payment:
  *   post:
  *     summary: Verify Razorpay payment and update order
  *     tags: [Payment]
@@ -132,7 +132,7 @@ router.post('/api/create-payment-order',
  *       200:
  *         description: Payment verified and order updated
  */
-router.post('/api/verify-payment',
+router.post('/verify-payment',
     orderController.verifyPayment
 );
 

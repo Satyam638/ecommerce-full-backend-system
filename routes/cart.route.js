@@ -6,7 +6,7 @@ const validInput = require('../middlewares/inputValidator');
 // add to cart route
 /**
  * @swagger
- * /api/add-items-to-cart:
+ * /api/cart/add-items-to-cart:
  *   post:
  *     summary: Add items to cart
  *     tags: [Cart]
@@ -32,14 +32,14 @@ const validInput = require('../middlewares/inputValidator');
  *       200:
  *         description: Items added to cart successfully
  */
-router.post('/api/add-items-to-cart',
+router.post('/add-items-to-cart',
     isAutheticate.validUser,
     validInput.cartInputValid,
     cartController.addToCart
 );
 /**
  * @swagger
- * /api/update-cart:
+ * /api/cart/update-cart:
  *   put:
  *     summary: Update product quantity in cart
  *     tags: [Cart]
@@ -60,13 +60,13 @@ router.post('/api/add-items-to-cart',
  *       200:
  *         description: Cart updated successfully
  */
-router.put('/api/update-cart',
+router.put('/update-cart',
     isAutheticate.validUser,
     cartController.updateQty
 );
 /**
  * @swagger
- * /api/get-cart:
+ * /api/cart/get-cart:
  *   get:
  *     summary: Get user cart
  *     tags: [Cart]
@@ -76,13 +76,13 @@ router.put('/api/update-cart',
  *       200:
  *         description: Cart fetched successfully
  */
-router.get('/api/get-cart',
+router.get('/get-cart',
     isAutheticate.validUser,
     cartController.getCart
 );
 /**
  * @swagger
- * /api/delete-product/{productId}:
+ * /api/cart/delete-product/{productId}:
  *   delete:
  *     summary: Remove product from cart
  *     tags: [Cart]
@@ -99,7 +99,7 @@ router.get('/api/get-cart',
  *       200:
  *         description: Product removed from cart
  */
-router.delete('/api/delete-product',
+router.delete('/delete-product',
     isAutheticate.validUser,
     cartController.deleteProduct
 )

@@ -5,50 +5,6 @@ const upload = require('../middlewares/upload')
 const isValid = require('../middlewares/inputValidator');
 const authenticate = require('../middlewares/identifiers');
 
-// homepage
-/**
- * @swagger
- * /api/:
- *   get:
- *     summary: Get all products (Homepage)
- *     tags: [Product]
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         required: false
- *         description: Page number
- *
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         required: false
- *         description: Number of products per page
- *
- *     responses:
- *       200:
- *         description: Products fetched successfully
- *         content:
- *           application/json:
- *             example:
- *               success: true
- *               message: All products fetched successfully
- *               count: 20
- *               data:
- *                 - _id: "123"
- *                   name: "iPhone 15"
- *                   category: "mobile"
- *                   price: 79999
- *
- *       500:
- *         description: Internal Server Error
- */
-route.get('',productController.getAllProduct);
-
 // add product
 /**
  * @swagger
@@ -56,6 +12,8 @@ route.get('',productController.getAllProduct);
  *   post:
  *     summary: Add a new product
  *     tags: [Product]
+ *     security:
+ *       - tokenAuth:[]
  *     requestBody:
  *       required: true
  *       content:
@@ -76,10 +34,11 @@ route.get('',productController.getAllProduct);
  *       200:
  *         description: Product added successfully
  */
-route.post('/api/products/add-product',
+route.post('/add-product',
+    authenticate.validUser,
     authenticate.isAdmin, //only admin can add product
-   upload.single('productImage'), //multer will read image data  
-   isValid.isInputValid, // check input is valid or not
+    upload.single('productImage'), //multer will read image data  
+    isValid.isInputValid, // check input is valid or not
     productController.createorAddProduct //business logic to store product into database
 );
 /**
@@ -112,7 +71,8 @@ route.post('/api/products/add-product',
  *       200:
  *         description: Product updated successfully
  */
-route.put('/api/products/update-product/:id',
+route.put('/update-product/:id',
+    authenticate.validUser,
     authenticate.isAdmin, //only admin can update details of product
     productController.updateProduct
 );
@@ -126,7 +86,7 @@ route.put('/api/products/update-product/:id',
  *       200:
  *         description: List of all products
  */
-route.get('/api/products/all-product',
+route.get('/all-product',
     productController.getAllProduct
 );
 
@@ -148,8 +108,8 @@ route.get('/api/products/all-product',
  *         description: Product found
  */
 route.get(
-  '/api/products/search',
-  productController.getProductByName
+    '/search',
+    productController.getProductByName
 );
 /**
  * @swagger
@@ -189,6 +149,16 @@ route.get(
  *       500:
  *         description: Internal Server Error
  */
-route.get('/api/products/category',productController.getProductByCategory);
+route.get('/category', productController.getProductByCategory);
+
+// delete products
+route.delete('/delete:id',
+    authenticate.validUser,
+    authenticate.isAdmin,
+    productController.deleteProductById);
+// lowStock products
+route.get('/low-stock-products',
+    authenticate.validUser,authenticate.isAdmin,
+    productController.lowStockProduct);
 
 module.exports = route;

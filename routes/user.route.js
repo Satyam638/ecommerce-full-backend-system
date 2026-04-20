@@ -6,7 +6,7 @@ const isAuthenticated = require('../middlewares/identifiers');
 
 /**
  * @swagger
- * /api/register/register-user:
+ * /api/auth/register:
  *   post:
  *     summary: Register a new user
  *     tags: [Auth]
@@ -27,35 +27,33 @@ const isAuthenticated = require('../middlewares/identifiers');
  *       200:
  *         description: User registered successfully
  */
-router.post('/api/register/register-user',
+router.post('/register/',
     inpReqVal.validateUserReq,
     authController.registerUser);
 /**
  * @swagger
- * /api/user/login-user:
+ * /api/auth/login:
  *   post:
- *     summary: Login user
+ *     summary: User login
  *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
+ *           example:
+ *             email: "test@gmail.com"
+ *             password: "123456"
  *     responses:
  *       200:
  *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
  */
-router.post('/api/user/login-user',
+router.post('/login',
     authController.loginUser);
 /**
  * @swagger
- * /api/user/reset-password:
+ * /api/auth/user/reset-password:
  *   put:
  *     summary: Reset user password
  *     tags: [Auth]
@@ -76,12 +74,12 @@ router.post('/api/user/login-user',
  *       200:
  *         description: Password updated successfully
  */
-router.put('/api/user/reset-password',
+router.put('/user/reset-password',
     isAuthenticated.validUser,
     authController.resetPassword);
 /**
  * @swagger
- * /api/user/logout:
+ * /api/auth/user/logout:
  *   post:
  *     summary: Logout user
  *     tags: [Auth]
@@ -91,12 +89,12 @@ router.put('/api/user/reset-password',
  *       200:
  *         description: Logout successful
  */
-router.post('/api/user/logout',
+router.post('/user/logout',
     isAuthenticated.validUser,
     authController.logoutUser);
 /**
  * @swagger
- * /api/user/all-user:
+ * /api/auth/user/all-user:
  *   get:
  *     summary: Get all users (Admin only)
  *     tags: [Auth]
@@ -106,9 +104,14 @@ router.post('/api/user/logout',
  *       200:
  *         description: List of all users
  */
-router.get('/api/user/all-user',
+router.get('/user/all-user',
     isAuthenticated.validUser,
     isAuthenticated.isAdmin,
     authController.getAlluser);
+
+router.get('/admin/dashboards',
+    isAuthenticated.validUser,
+    isAuthenticated.isAdmin,
+    authController.dashboards)
 
 module.exports = router
