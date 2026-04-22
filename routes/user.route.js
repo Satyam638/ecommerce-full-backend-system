@@ -3,6 +3,7 @@ const router = express.Router();
 const authController = require('../controllers/user.controllers');
 const inpReqVal = require('../middlewares/inputValidator');
 const isAuthenticated = require('../middlewares/identifiers');
+const rateLimiter = require('../config/rateLimiter');
 
 /**
  * @swagger
@@ -50,6 +51,7 @@ router.post('/register/',
  *         description: Invalid credentials
  */
 router.post('/login',
+    rateLimiter.loginRateLimiter,
     authController.loginUser);
 /**
  * @swagger

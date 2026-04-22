@@ -37,7 +37,7 @@ const createorAddProduct = async (req, res) => {
         console.log("Product Details:", newProduct)
         // delete cache
         await redisClient.del("allProducts");
-        console.log('Delete Cache Data Successfully')
+                console.log('Delete Cache Data Successfully')
         res.status(201).json({
             success: true,
             message: "Product is Added",
